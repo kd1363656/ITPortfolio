@@ -1,0 +1,1130 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VoiDo Portfolio</title>
+<meta name="description" content="VoiDo：キャラクターが声と表情でタスクを伝える Android ToDo アプリ。Kotlin / Jetpack Compose / C++ (JNI) / VOICEVOX。設計の考え方・コードの工夫・開発プロセスをまとめたポートフォリオ。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f6f6fa;
+  --surface: #ffffff;
+  --surface-2: #f0f0f6;
+  --text: #1b1b24;
+  --muted: #5f6272;
+  --border: #e3e4ec;
+  --accent: #a94f5c;
+  --accent-2: #c2649a;
+  --accent-soft: #f7e3e6;
+  --accent-ink: #4a1620;
+  --good: #1f9a5f;
+  --warn: #b7791f;
+  --code-bg: #171822;
+  --code-text: #e8e9f2;
+  --code-head: #21222f;
+  --k: #c792ea; --s: #c3e88d; --c: #7d8299; --n: #f78c6c; --a: #ffcb6b; --t: #82aaff;
+  --shadow: 0 1px 2px rgba(20,20,40,.05), 0 10px 30px rgba(20,20,40,.07);
+  --radius: 16px;
+  --max: 1120px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1016; --surface: #171821; --surface-2: #1e1f2b; --text: #e8e9f0; --muted: #9ea2b5; --border: #2b2d3c;
+    --accent: #e3a3ac; --accent-2: #e3a7cb; --accent-soft: #3a1f26; --accent-ink: #ffd9df;
+    --code-bg: #0b0c12; --code-head: #141520;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 10px 30px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1016; --surface: #171821; --surface-2: #1e1f2b; --text: #e8e9f0; --muted: #9ea2b5; --border: #2b2d3c;
+  --accent: #e3a3ac; --accent-2: #e3a7cb; --accent-soft: #3a1f26; --accent-ink: #ffd9df;
+  --code-bg: #0b0c12; --code-head: #141520;
+  --shadow: 0 1px 2px rgba(0,0,0,.35), 0 10px 30px rgba(0,0,0,.3);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: "Noto Sans JP", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 16px; line-height: 1.9; -webkit-font-smoothing: antialiased;
+  transition: background .3s ease, color .3s ease;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+img { max-width: 100%; height: auto; display: block; }
+code, pre, .mono { font-family: "JetBrains Mono", Consolas, monospace; }
+:not(pre) > code { background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px; font-size: .88em; }
+h1, h2, h3, h4 { line-height: 1.35; margin: 0; letter-spacing: -.01em; }
+p { margin: 0 0 1em; }
+.wrap { max-width: var(--max); margin: 0 auto; padding: 0 20px; }
+.muted { color: var(--muted); }
+.small { font-size: 14px; }
+
+/* ---------- nav ---------- */
+.nav { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(12px); background: color-mix(in srgb, var(--bg) 82%, transparent); border-bottom: 1px solid var(--border); }
+.nav .wrap { display: flex; align-items: center; gap: 18px; height: 60px; }
+.nav .brand { font-weight: 900; font-size: 18px; color: var(--text); display: flex; align-items: center; gap: 10px; }
+.nav .brand i { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; font-style: normal; color: #fff; font: 700 13px "JetBrains Mono", monospace; background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
+.nav nav { display: flex; gap: 4px; margin-left: auto; overflow-x: auto; scrollbar-width: none; }
+.nav nav::-webkit-scrollbar { display: none; }
+.nav nav a { color: var(--muted); font-size: 13.5px; font-weight: 500; padding: 6px 10px; border-radius: 8px; white-space: nowrap; }
+.nav nav a:hover, .nav nav a.on { color: var(--text); background: var(--surface-2); text-decoration: none; }
+.btn { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 10px; padding: 7px 12px; font: 600 13px "Noto Sans JP", sans-serif; cursor: pointer; white-space: nowrap; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* ---------- hero ---------- */
+.hero { position: relative; overflow: hidden; padding: 72px 0 56px; border-bottom: 1px solid var(--border); }
+.hero::before { content: ""; position: absolute; inset: 0; background:
+  radial-gradient(900px 500px at 15% -10%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 60%),
+  radial-gradient(700px 420px at 95% 20%, color-mix(in srgb, var(--accent-2) 18%, transparent), transparent 60%); pointer-events: none; }
+.hero .grid { position: relative; display: grid; grid-template-columns: 1.15fr .85fr; gap: 40px; align-items: center; }
+.kicker { font: 700 12px "JetBrains Mono", monospace; letter-spacing: .14em; color: var(--accent); margin: 0 0 14px; }
+.hero h1 { font-size: clamp(28px, 4.2vw, 54px); font-weight: 900; word-break: keep-all; overflow-wrap: anywhere; }
+.hero h1 span { background: linear-gradient(90deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero .lead { font-size: 17.5px; color: var(--muted); margin: 18px 0 22px; max-width: 560px; }
+.pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 22px; }
+.pill { font-size: 13px; font-weight: 600; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); }
+.pill.status { border-color: color-mix(in srgb, var(--good) 50%, var(--border)); color: var(--good); background: color-mix(in srgb, var(--good) 10%, var(--surface)); }
+.pill.status::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--good); margin-right: 7px; animation: blink 1.6s ease-in-out infinite; }
+@keyframes blink { 50% { opacity: .35; } }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 26px; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 14px 12px; }
+.stat b { display: block; font-size: 26px; font-weight: 900; line-height: 1.1; }
+.stat span { font-size: 12.5px; color: var(--muted); }
+.hero-visual { position: relative; display: flex; justify-content: center; }
+.phone { width: 250px; aspect-ratio: 9 / 20; border-radius: 34px; padding: 10px; background: #15161c; box-shadow: 0 30px 60px rgba(0,0,0,.28), inset 0 0 0 2px #2a2b33; }
+.phone img { width: 100%; height: 100%; object-fit: cover; border-radius: 26px; }
+.hero .phone { animation: float 6s ease-in-out infinite; }
+@keyframes float { 50% { transform: translateY(-10px); } }
+.hero-visual { flex-direction: column; align-items: center; gap: 16px; }
+.hero .bubble { max-width: 300px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px 16px 16px 16px; padding: 10px 14px; font-size: 13.5px; box-shadow: var(--shadow); animation: pop .8s cubic-bezier(.2,.9,.3,1.4) .4s both; }
+.hero .bubble b { color: var(--accent); }
+@keyframes pop { from { transform: scale(.6); opacity: 0; } }
+
+/* ---------- sections ---------- */
+section.sec { padding: 72px 0 24px; }
+.sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+.sec-head .num { font: 700 13px "JetBrains Mono", monospace; color: var(--accent); letter-spacing: .1em; }
+.sec-head h2 { font-size: clamp(24px, 3vw, 32px); font-weight: 900; }
+.sec-lead { color: var(--muted); max-width: 760px; margin-bottom: 28px; font-size: 16.5px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 22px 24px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.card h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+.card h3 .ico { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); font-size: 17px; flex: none; }
+.card p { font-size: 14.5px; color: var(--muted); margin: 0; }
+.card p + p { margin-top: 8px; }
+.problem { border-left: 4px solid var(--accent); padding: 14px 18px; background: var(--accent-soft); border-radius: 0 12px 12px 0; margin: 10px 0 26px; color: var(--accent-ink); }
+.problem b { display: block; font-size: 13px; letter-spacing: .08em; margin-bottom: 4px; }
+.problem p { margin: 0; color: inherit; font-size: 15px; }
+
+/* ---------- gallery ---------- */
+.gallery { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.shot { text-align: center; }
+.shot .phone { width: 100%; margin: 0 auto; padding: 7px; border-radius: 26px; }
+.shot .phone img { border-radius: 20px; }
+.shot h4 { font-size: 15px; margin: 14px 0 4px; }
+.shot p { font-size: 13px; color: var(--muted); margin: 0; text-align: left; }
+.strip { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+.strip img { border-radius: 10px; margin: 0 auto; }
+.strip h4 { font-size: 15px; margin: 12px 0 2px; }
+.strip p { font-size: 13.5px; color: var(--muted); margin: 0; }
+.checker { background-image: linear-gradient(45deg, var(--surface-2) 25%, transparent 25%), linear-gradient(-45deg, var(--surface-2) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, var(--surface-2) 75%), linear-gradient(-45deg, transparent 75%, var(--surface-2) 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0; }
+
+/* ---------- tech ---------- */
+.tech { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.tech .t { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+.tech .t b { display: block; font-size: 14.5px; }
+.tech .t span { font-size: 12.5px; color: var(--muted); }
+.arch { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); margin-top: 22px; }
+.arch svg { width: 100%; height: auto; display: block; }
+.arch .box { fill: var(--surface-2); stroke: var(--border); }
+.arch .box.ui { fill: color-mix(in srgb, var(--accent) 14%, var(--surface)); stroke: var(--accent); }
+.arch .box.vm { fill: color-mix(in srgb, var(--accent-2) 14%, var(--surface)); stroke: var(--accent-2); }
+.arch .box.native { fill: color-mix(in srgb, var(--warn) 14%, var(--surface)); stroke: var(--warn); }
+.arch text { fill: var(--text); font-family: "Noto Sans JP", sans-serif; font-size: 12px; }
+.arch text.h { font-weight: 700; font-size: 13px; }
+.arch text.m { fill: var(--muted); font-size: 11px; }
+.arch text.mono { font-family: "JetBrains Mono", monospace; font-size: 11px; }
+.arch .ln { stroke: var(--muted); stroke-width: 1.4; fill: none; marker-end: url(#arr); }
+.arch .ln.ac { stroke: var(--accent); }
+.arch .lane { fill: none; stroke: var(--border); stroke-dasharray: 4 4; }
+
+/* ---------- highlights ---------- */
+.hl { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; margin-bottom: 34px; }
+.hl.alt .text { order: 2; }
+.hl .text h3 { font-size: 20px; font-weight: 900; margin-bottom: 10px; }
+.hl .text .why { font-size: 13px; font-weight: 700; color: var(--accent); letter-spacing: .06em; display: block; margin-bottom: 6px; }
+.hl .text p { font-size: 15px; color: var(--muted); }
+.hl .text ul { margin: 8px 0 0; padding-left: 18px; font-size: 14.5px; color: var(--muted); }
+.hl .text li { margin: 3px 0; }
+.hl .text li b { color: var(--text); font-weight: 700; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; }
+.tags span { font-size: 12px; padding: 2px 9px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); font-family: "JetBrains Mono", monospace; }
+.code { border-radius: 14px; overflow: hidden; background: var(--code-bg); color: var(--code-text); box-shadow: var(--shadow); font-size: 12.6px; line-height: 1.65; }
+.code .head { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--code-head); font: 600 12px "JetBrains Mono", monospace; color: #b9bdd0; }
+.code .head .dot { width: 10px; height: 10px; border-radius: 50%; background: #ff5f57; box-shadow: 16px 0 0 #febc2e, 32px 0 0 #28c840; margin-right: 32px; }
+.code .head .lang { margin-left: auto; font-weight: 400; opacity: .7; }
+.code pre { margin: 0; padding: 14px 16px; overflow-x: auto; tab-size: 4; }
+.code .k { color: var(--k); } .code .s { color: var(--s); } .code .c { color: var(--c); font-style: italic; } .code .n { color: var(--n); } .code .a { color: var(--a); } .code .t { color: var(--t); }
+.code + .code { margin-top: 12px; }
+
+/* ---------- demo ---------- */
+.demo { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 22px; }
+.demo h3 { font-size: 17px; margin-bottom: 4px; }
+.demo .sub { font-size: 13.5px; color: var(--muted); margin-bottom: 14px; }
+.lip { display: grid; grid-template-columns: 220px 1fr; gap: 20px; align-items: center; }
+.lip canvas { width: 220px; height: 253px; border-radius: 14px; background: var(--surface-2); display: block; }
+.meter { height: 14px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); overflow: hidden; position: relative; }
+.meter i { position: absolute; inset: 0; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .05s linear; }
+.marks { position: relative; height: 22px; font: 600 11px "JetBrains Mono", monospace; color: var(--muted); }
+.marks span { position: absolute; transform: translateX(-50%); top: 2px; }
+.marks span::before { content: ""; position: absolute; left: 50%; top: -8px; width: 1px; height: 6px; background: var(--border); }
+.lip input[type=range] { width: 100%; accent-color: var(--accent); }
+.shape { display: inline-flex; align-items: center; gap: 8px; font: 600 13px "JetBrains Mono", monospace; padding: 4px 10px; border-radius: 8px; background: var(--accent-soft); color: var(--accent-ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 999px; padding: 5px 12px 5px 6px; background: var(--surface-2); cursor: pointer; font: 600 13px "Noto Sans JP", sans-serif; color: var(--text); }
+.chip i { width: 20px; height: 20px; border-radius: 50%; display: inline-block; }
+.chip.on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 14px; }
+.sw { border-radius: 10px; height: 54px; border: 1px solid var(--border); display: flex; align-items: flex-end; padding: 6px 8px; font: 600 10.5px "JetBrains Mono", monospace; }
+
+/* ---------- principles / process ---------- */
+.rules { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.rule { display: grid; grid-template-columns: 40px 1fr; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+.rule .n { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font: 700 14px "JetBrains Mono", monospace; color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
+.rule b { display: block; font-size: 15px; }
+.rule p { margin: 2px 0 0; font-size: 13.5px; color: var(--muted); }
+.timeline { position: relative; margin: 10px 0 0; padding: 0 0 0 26px; list-style: none; }
+.timeline::before { content: ""; position: absolute; left: 8px; top: 6px; bottom: 6px; width: 2px; background: var(--border); }
+.timeline li { position: relative; padding: 0 0 18px; }
+.timeline li::before { content: ""; position: absolute; left: -24px; top: 9px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.timeline .d { font: 700 12px "JetBrains Mono", monospace; color: var(--accent); }
+.timeline b { display: block; font-size: 15px; }
+.timeline p { margin: 0; font-size: 13.5px; color: var(--muted); }
+.trouble { display: grid; gap: 12px; }
+.trouble .row { display: grid; grid-template-columns: 1fr 1fr; gap: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+.trouble .row > div { padding: 14px 16px; font-size: 14px; }
+.trouble .row .q { background: var(--surface-2); border-right: 1px solid var(--border); }
+.trouble .row .q b, .trouble .row .a b { display: block; font-size: 11.5px; letter-spacing: .1em; color: var(--muted); margin-bottom: 4px; font-family: "JetBrains Mono", monospace; }
+.trouble .row .a b { color: var(--good); }
+table.plain { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+table.plain th, table.plain td { padding: 10px 14px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+table.plain th { background: var(--surface-2); font-size: 13px; }
+table.plain tr:last-child td { border-bottom: 0; }
+.ok { color: var(--good); font-weight: 700; }
+details.more { margin-top: 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+details.more summary { cursor: pointer; padding: 12px 16px; font-weight: 700; font-size: 14.5px; list-style: none; }
+details.more summary::-webkit-details-marker { display: none; }
+details.more summary::before { content: "▸ "; color: var(--accent); }
+details.more[open] summary::before { content: "▾ "; }
+details.more .inner { padding: 0 16px 16px; }
+footer { border-top: 1px solid var(--border); margin-top: 60px; padding: 36px 0 48px; font-size: 14px; color: var(--muted); }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 14px 30px; align-items: center; justify-content: space-between; }
+.totop { position: fixed; right: 18px; bottom: 18px; width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--text); box-shadow: var(--shadow); cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .25s; font-size: 18px; }
+.totop.show { opacity: 1; pointer-events: auto; }
+.grid2 > *, .grid3 > *, .hl > *, .gallery > *, .lip > * { min-width: 0; }
+.code { min-width: 0; }
+.reveal { opacity: 0; transform: translateY(16px); transition: opacity .45s ease, transform .45s ease; }
+.reveal.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } .hero .phone, .pill.status::before { animation: none; } }
+
+@media (max-width: 980px) {
+  .hero .grid { grid-template-columns: 1fr; }
+  .hero-visual { order: -1; }
+  .hero .phone { width: 210px; }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .gallery { grid-template-columns: repeat(2, 1fr); }
+  .grid3 { grid-template-columns: 1fr; }
+  .hl, .hl.alt { grid-template-columns: 1fr; }
+  .hl.alt .text { order: 0; }
+  .rules, .trouble .row, .grid2 { grid-template-columns: 1fr !important; }
+  .trouble .row .q { border-right: 0; border-bottom: 1px solid var(--border); }
+  .swatches { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 560px) {
+  .wrap { padding: 0 16px; }
+  .hero { padding: 36px 0 40px; }
+  .hero .phone { width: 168px; }
+  .hero .bubble { font-size: 12.5px; }
+  .lip { grid-template-columns: 1fr; }
+  .lip canvas { margin: 0 auto; }
+  .nav .brand span { display: none; }
+  section.sec { padding: 56px 0 16px; }
+}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top"><i>Vo</i><span>VoiDo</span></a>
+    <nav id="nav">
+      <a href="#about">概要</a>
+      <a href="#screens">画面</a>
+      <a href="#motion">演出</a>
+      <a href="#tech">技術</a>
+      <a href="#code">コードの工夫</a>
+      <a href="#design">設計の考え方</a>
+      <a href="#process">開発プロセス</a>
+      <a href="#quality">品質</a>
+      <a href="#next">今後</a>
+      <a href="#credits">クレジット</a>
+    </nav>
+    <button class="btn" id="theme" title="ライト／ダーク切替">🌓</button>
+  </div>
+</header>
+
+<header class="hero" id="top">
+  <div class="wrap grid">
+    <div>
+      <p class="kicker">PORTFOLIO · ANDROID APP</p>
+      <h1>キャラクターが<span>声と表情</span>で<br>今日のタスクを伝える<br>ToDo アプリ「VoiDo」</h1>
+      <p class="lead">Voice + Do。アプリを開くと、選んだキャラクターが<b>未完了のタスクだけ</b>を声で読み上げ、口パク・まばたき・表情で反応します。音声合成は VOICEVOX CORE を <b>C++（JNI）で直接組み込み</b>、キャラクターごとの色・口調・声はすべて JSON のデータで切り替わります。</p>
+      <div class="pills">
+        <span class="pill status">開発中 · 2026年11月 公開予定</span>
+        <span class="pill">Kotlin</span><span class="pill">Jetpack Compose</span><span class="pill">C++17 / JNI</span><span class="pill">VOICEVOX CORE</span><span class="pill">Room · Hilt · DataStore</span>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn primary" href="#code">コードの工夫を見る</a>
+        <a class="btn" href="#screens">画面を見る</a>
+        <a class="btn" href="https://github.com/kd1363656" target="_blank" rel="noopener">GitHub ↗</a>
+      </div>
+      <div class="stats">
+        <div class="stat"><b>35</b><span>機能ごとの開発ステップ</span></div>
+        <div class="stat"><b>5,900<small style="font-size:14px">行</small></b><span>Kotlin 約5,700行 + C++ 約180行</span></div>
+        <div class="stat"><b>39</b><span>自動テスト（単体 33 / 実機 6）</span></div>
+        <div class="stat"><b>6</b><span>キャラクター × 配色 × 声</span></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="phone"><img src="images/today_speaking.png" alt="今日のタスク画面。東北きりたんが「15:30からZoom meeting」と読み上げ、口を開けている" width="540" height="1200"></div>
+      <div class="bubble"><b>読み上げ中</b><br>残っているタスクだけを時刻順に、キャラの口調で。音の大きさに合わせて口が動きます。</div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- ============================ 概要 ============================ -->
+<section class="sec" id="about">
+  <div class="wrap">
+    <div class="sec-head"><span class="num">01</span><h2>何を、なぜ作ったか</h2></div>
+    <p class="sec-lead">ToDo アプリは「登録はするが、開かなくなる」ことが一番の課題だと感じていました。開く理由を作るために、<b>キャラクターが話しかけてくる</b>体験を中心に据えています。</p>
+    <div class="problem reveal">
+      <b>課題 → 解決</b>
+      <p>予定は登録しても、見返さなければ忘れる。通知だけでは味気なく、すぐ消されてしまう。<br>→ 開いた瞬間にキャラクターが「残っているタスク」を声で伝え、終わるほど笑顔になる。「見に行く」のではなく「教えてもらう」ToDo にした。</p>
+    </div>
+    <div class="grid3">
+      <div class="card reveal"><h3><span class="ico">🔊</span>声で伝える</h3><p>その日初めて開いたときは、未完了のタスクを時刻順に読み上げ、最後に応援の一言。2回目以降は季節と地元の話を少しして、残りの量に合わせた一言を添えます。</p><p>英語のタスク名も「Zoom meeting → ズーム ミーティング」とカタカナに変換して読みます。</p></div>
+      <div class="card reveal"><h3><span class="ico">🙂</span>表情と口パク</h3><p>再生中の音の大きさ（RMS）を 1/30 秒ごとに測って口の形を切り替え、ふだんはランダムな間隔でまばたき。全部終わると笑顔、夜は眠そう、残りが多いとジト目になります。</p></div>
+      <div class="card reveal"><h3><span class="ico">🎨</span>キャラごとに変わるアプリ</h3><p>6人のキャラクターは、立ち絵・声・口調・テーマカラーをすべて JSON で持っています。キャラを選び替えると、配色が溶けるように変わり、セリフの語尾も声も変わります。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 画面 ============================ -->
+<section class="sec" id="screens">
+  <div class="wrap">
+    <div class="sec-head"><span class="num">02</span><h2>画面</h2></div>
+    <p class="sec-lead">3つのタブ（今日のタスク／一年のタスク／設定）と、右下の＋ボタンから出るタスク入力シート。すべてエミュレータ（Android 16, API 37）で動かしたスクリーンショットです。</p>
+    <div class="gallery">
+      <figure class="shot reveal">
+        <div class="phone"><img src="images/today_list.png" alt="今日のタスク画面。進み具合リング、キャラと吹き出し、未完了が上・完了が下に並んだタスク一覧" loading="lazy"></div>
+        <h4>今日のタスク</h4><p>上から「進み具合リング」「キャラと吹き出し」「一覧」。<b>未完了が上・完了は下</b>に沈み、いま取りかかるべきタスクには「いま」ラベルと色が付きます。</p>
+      </figure>
+      <figure class="shot reveal">
+        <div class="phone"><img src="images/today_all_done.png" alt="全部完了した今日のタスク画面。リングがチェックマークになり、キャラが笑顔" loading="lazy"></div>
+        <h4>全部完了</h4><p>最後の1件にチェックを入れると、リングが Y 軸でくるっと回ってチェックマークに変わり、キャラが笑顔になります。</p>
+      </figure>
+      <figure class="shot reveal">
+        <div class="phone"><img src="images/year_selected.png" alt="一年のタスク画面。月のカレンダーと、選んだ日のタスク一覧" loading="lazy"></div>
+        <h4>一年のタスク</h4><p>左右スワイプで月をめくるカレンダー（前後100年分をページとして用意）。選んだ日のタスクが下に並び、長押しで削除できます。</p>
+      </figure>
+      <figure class="shot reveal">
+        <div class="phone"><img src="images/add_sheet.png" alt="タスク入力シート。入力欄、時計型の時刻選択、リマインドのスイッチ" loading="lazy"></div>
+        <h4>タスク入力シート</h4><p>下からイージングでせり上がり、時計は少し遅れて弾んで出てきます。時計⇔数字入力の切り替え、リマインドのベルは ON で揺れます。</p>
+      </figure>
+      <figure class="shot reveal">
+        <div class="phone"><img src="images/settings_characters.png" alt="設定画面。通知・読み上げのスイッチと、6人のキャラクターのカード" loading="lazy"></div>
+        <h4>設定</h4><p>通知／読み上げの自作トグル、キャラクター選択（選ばれていないカードは少し縮む）、話す速さ・声の高さのスライダーと試し聞き。</p>
+      </figure>
+      <figure class="shot reveal">
+        <div class="phone"><img src="images/today_zundamon.png" alt="ずんだもんを選んだ今日のタスク画面。アプリ全体が緑の配色になっている" loading="lazy"></div>
+        <h4>キャラを替えると配色も変わる</h4><p>JSON の1色（seedColor）から Material 3 の配色一式を生成。ずんだもんなら緑、きりたんなら臙脂。背景のひし形模様の色も追従します。</p>
+      </figure>
+      <figure class="shot reveal">
+        <div class="phone"><img src="images/today_dark.png" alt="ダークモードの今日のタスク画面" loading="lazy"></div>
+        <h4>ダークモード</h4><p>同じ seedColor から、背景を暗く文字を明るくしたトーンで配色を作り直すので、どのキャラでもダークモードに対応します。</p>
+      </figure>
+      <figure class="shot reveal">
+        <div class="phone" style="aspect-ratio:auto"><img src="images/notification.png" alt="通知。タスクの時刻にキャラの口調でお知らせ" loading="lazy" style="height:auto;aspect-ratio:540/550"></div>
+        <h4>時刻ぴったりの通知</h4><p>AlarmManager でタスクごとに予約し、キャラの口調で通知。端末の再起動後も予約し直し、Android 12 以降の「正確なアラーム」許可にも対応。</p>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 演出 ============================ -->
+<section class="sec" id="motion">
+  <div class="wrap">
+    <div class="sec-head"><span class="num">03</span><h2>動きと演出</h2></div>
+    <p class="sec-lead">「出る・消える・切り替わる」ものには必ずイージングのアニメーションを付ける、というルールで作っています。目を引くことも、ToDo を開いてもらうための機能だと考えているからです。</p>
+    <div class="grid2">
+      <div class="strip reveal">
+        <img src="images/lipsync_frames.png" alt="読み上げ中の口パクの4コマ。閉じ・お・あ・あ の口に切り替わる" loading="lazy">
+        <h4>口パク（リップシンク）</h4><p>AudioTrack に 1/30 秒ぶんずつ書き込みながら、その区間の RMS（音の大きさ）を計算して「閉じ・う・お・あ」の口画像に差し替えます。実際の読み上げ中の連続スクリーンショットです。</p>
+      </div>
+      <div class="strip reveal">
+        <img src="images/ring_flip_sequence.png" alt="全部完了したときに、進み具合リングが回転してチェックマークに変わる4コマ" loading="lazy">
+        <h4>達成のコインフリップ</h4><p>完了するほど縁取られていくリングが、全部終わると <code>rotationY</code> で1回転して裏面のチェックに。裏を向いている間は中身を 180° 戻し、文字が鏡像にならないようにしています。</p>
+      </div>
+      <div class="strip reveal">
+        <img src="images/eye_variants.png" alt="通常・閉じ・笑顔・眠そう・ジト目の目の差分" loading="lazy">
+        <h4>表情は状況から決まる</h4><p>お祝い中 &gt; 全部完了 &gt; セリフ指定 &gt; 夜 &gt; 通常 の優先順位を <code>when</code> 1つで表現。まばたきは 2〜5 秒のランダム間隔で、20% の確率で2回連続（機械っぽさを消すため）。</p>
+      </div>
+      <div class="strip reveal">
+        <img src="images/all_characters.png" alt="6人のキャラクターごとに配色が変わった今日のタスク画面" loading="lazy">
+        <h4>6人ぶんの配色・口調・声</h4><p>キャラを替えると色が <code>Animatable</code> で溶けるように変わり、吹き出しの語尾（「〜です」「〜なのだ」）と VOICEVOX の話者も切り替わります。</p>
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:18px">
+      <div class="strip reveal">
+        <img src="images/swipe_open.png" alt="タスクを左にスワイプすると、赤い削除ボタンが右から伸びて出てくる" loading="lazy">
+        <h4>スワイプで削除</h4><p><code>anchoredDraggable</code> で「閉じ／開き」の2点に吸い付くスワイプ。開いた割合に合わせて赤い背景が伸び、ゴミ箱アイコンが濃く大きくなります。</p>
+      </div>
+      <div class="strip reveal">
+        <img src="images/current_and_return.png" alt="「いま」ラベルの強調と、タブから戻ったときの雑談" loading="lazy" style="max-height:300px;width:auto">
+        <h4>「いま」の強調とタブ復帰の反応</h4><p>開始時刻を過ぎた未完了タスクのうち一番新しいものを色と「いま」ラベルで強調。別のタブから戻ると、前回と違う雑談を1つ話します。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 技術 ============================ -->
+<section class="sec" id="tech">
+  <div class="wrap">
+    <div class="sec-head"><span class="num">04</span><h2>技術構成とアーキテクチャ</h2></div>
+    <p class="sec-lead">UI → ViewModel → Repository（インターフェース）→ 実装、の一方向の流れ。画面は保存先や音声エンジンの正体を知らず、Hilt が実装を差し込みます。テストでは同じインターフェースの偽物に差し替えられます。</p>
+    <div class="tech reveal">
+      <div class="t"><b>Kotlin 2.4 / Compose</b><span>Material 3 · BOM 2026.09 · AGP 9.4</span></div>
+      <div class="t"><b>MVVM + 単方向データフロー</b><span>StateFlow · collectAsStateWithLifecycle</span></div>
+      <div class="t"><b>Room 2.8</b><span>Flow で監視 · Migration 1→2</span></div>
+      <div class="t"><b>Hilt 2.60</b><span>@Binds でインターフェース注入</span></div>
+      <div class="t"><b>DataStore Preferences</b><span>設定・最終あいさつ日</span></div>
+      <div class="t"><b>C++17 + CMake + JNI</b><span>VOICEVOX CORE 0.17 を直接呼ぶ</span></div>
+      <div class="t"><b>AudioTrack（MODE_STREAM）</b><span>再生しながら RMS で口パク</span></div>
+      <div class="t"><b>AlarmManager + BroadcastReceiver</b><span>正確な時刻の通知 · 再起動対応</span></div>
+      <div class="t"><b>kotlinx.serialization</b><span>キャラ定義 JSON · AudioQuery 編集</span></div>
+      <div class="t"><b>Python（psd-tools / e2k）</b><span>PSD→画像+JSON · 英→カナ辞書生成</span></div>
+      <div class="t"><b>JUnit 4 / Compose UI Test</b><span>単体 33 · 実機 6 · Lint 警告 0</span></div>
+      <div class="t"><b>minSdk 26 / target 37</b><span>古い端末でも動くことを優先</span></div>
+    </div>
+
+    <div class="arch reveal">
+      <svg viewBox="0 0 1000 470" role="img" aria-label="VoiDo のアーキテクチャ図。UI 層、ViewModel 層、Repository 層、実装層、ネイティブ層の流れ">
+        <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" style="color:var(--muted)"/></marker></defs>
+        <!-- lanes -->
+        <text x="16" y="34" class="m">UI（Compose）</text>
+        <text x="16" y="134" class="m">ViewModel</text>
+        <text x="16" y="234" class="m">Repository（interface）</text>
+        <text x="16" y="334" class="m">実装 / データ</text>
+        <text x="16" y="434" class="m">ネイティブ</text>
+        <line x1="10" y1="90" x2="990" y2="90" class="lane"/><line x1="10" y1="190" x2="990" y2="190" class="lane"/><line x1="10" y1="290" x2="990" y2="290" class="lane"/><line x1="10" y1="390" x2="990" y2="390" class="lane"/>
+        <!-- UI -->
+        <rect x="170" y="16" width="150" height="54" rx="10" class="box ui"/><text x="245" y="38" text-anchor="middle" class="h">TodayScreen</text><text x="245" y="56" text-anchor="middle" class="m">リング・吹き出し・一覧</text>
+        <rect x="340" y="16" width="150" height="54" rx="10" class="box ui"/><text x="415" y="38" text-anchor="middle" class="h">CharacterPortrait</text><text x="415" y="56" text-anchor="middle" class="m">口・目・呼吸・まばたき</text>
+        <rect x="510" y="16" width="130" height="54" rx="10" class="box ui"/><text x="575" y="38" text-anchor="middle" class="h">YearScreen</text><text x="575" y="56" text-anchor="middle" class="m">カレンダー</text>
+        <rect x="660" y="16" width="130" height="54" rx="10" class="box ui"/><text x="725" y="38" text-anchor="middle" class="h">SettingsScreen</text><text x="725" y="56" text-anchor="middle" class="m">キャラ・声・通知</text>
+        <rect x="810" y="16" width="170" height="54" rx="10" class="box ui"/><text x="895" y="38" text-anchor="middle" class="h">VoiDoTheme</text><text x="895" y="56" text-anchor="middle" class="m">seedColor → ColorScheme</text>
+        <!-- VM -->
+        <rect x="170" y="116" width="170" height="54" rx="10" class="box vm"/><text x="255" y="138" text-anchor="middle" class="h">TaskViewModel</text><text x="255" y="156" text-anchor="middle" class="m">displayOrderOf · 今日の切替</text>
+        <rect x="360" y="116" width="200" height="54" rx="10" class="box vm"/><text x="460" y="138" text-anchor="middle" class="h">TodaySpeechViewModel</text><text x="460" y="156" text-anchor="middle" class="m">いつ話す・口の形・表情</text>
+        <rect x="580" y="116" width="170" height="54" rx="10" class="box vm"/><text x="665" y="138" text-anchor="middle" class="h">SettingsViewModel</text><text x="665" y="156" text-anchor="middle" class="m">UiState · combine</text>
+        <rect x="770" y="116" width="210" height="54" rx="10" class="box"/><text x="875" y="138" text-anchor="middle" class="h">TodaySpeechScript（純粋）</text><text x="875" y="156" text-anchor="middle" class="m">台本を組み立てる · 単体テスト</text>
+        <!-- Repo -->
+        <rect x="150" y="216" width="150" height="54" rx="10" class="box"/><text x="225" y="238" text-anchor="middle" class="h">TaskRepository</text><text x="225" y="256" text-anchor="middle" class="mono">observeTasksOn()</text>
+        <rect x="320" y="216" width="170" height="54" rx="10" class="box"/><text x="405" y="238" text-anchor="middle" class="h">CharacterRepository</text><text x="405" y="256" text-anchor="middle" class="mono">observeCurrentCharacter()</text>
+        <rect x="510" y="216" width="160" height="54" rx="10" class="box"/><text x="590" y="238" text-anchor="middle" class="h">SettingsRepository</text><text x="590" y="256" text-anchor="middle" class="mono">Flow&lt;Boolean&gt;</text>
+        <rect x="690" y="216" width="130" height="54" rx="10" class="box"/><text x="755" y="238" text-anchor="middle" class="h">VoiceEngine</text><text x="755" y="256" text-anchor="middle" class="mono">synthesize()</text>
+        <rect x="840" y="216" width="140" height="54" rx="10" class="box"/><text x="910" y="238" text-anchor="middle" class="h">ReminderScheduler</text><text x="910" y="256" text-anchor="middle" class="mono">replaceAll()</text>
+        <!-- impl -->
+        <rect x="150" y="316" width="150" height="54" rx="10" class="box"/><text x="225" y="338" text-anchor="middle" class="h">Room</text><text x="225" y="356" text-anchor="middle" class="m">TaskDao · Migration</text>
+        <rect x="320" y="316" width="170" height="54" rx="10" class="box"/><text x="405" y="338" text-anchor="middle" class="h">assets/characters/*.json</text><text x="405" y="356" text-anchor="middle" class="m">立ち絵 PNG · 声 · 口調 · 色</text>
+        <rect x="510" y="316" width="160" height="54" rx="10" class="box"/><text x="590" y="338" text-anchor="middle" class="h">DataStore</text><text x="590" y="356" text-anchor="middle" class="m">Preferences</text>
+        <rect x="690" y="316" width="130" height="54" rx="10" class="box"/><text x="755" y="338" text-anchor="middle" class="h">VoicevoxEngine</text><text x="755" y="356" text-anchor="middle" class="m">Mutex · 辞書/モデルのコピー</text>
+        <rect x="840" y="316" width="140" height="54" rx="10" class="box"/><text x="910" y="338" text-anchor="middle" class="h">AlarmManager</text><text x="910" y="356" text-anchor="middle" class="m">Receiver · 再起動時同期</text>
+        <!-- native -->
+        <rect x="600" y="410" width="200" height="50" rx="10" class="box native"/><text x="700" y="431" text-anchor="middle" class="h">libvoido_voice.so（C++ JNI）</text><text x="700" y="449" text-anchor="middle" class="m">VOICEVOX CORE · ONNX Runtime · Open JTalk</text>
+        <rect x="820" y="410" width="160" height="50" rx="10" class="box native"/><text x="900" y="431" text-anchor="middle" class="h">VoicePlayer</text><text x="900" y="449" text-anchor="middle" class="m">AudioTrack · RMS → 口の形</text>
+        <!-- arrows -->
+        <path d="M245 70 V116" class="ln"/><path d="M415 70 V116" class="ln"/><path d="M575 70 V116" class="ln"/><path d="M725 70 V116" class="ln"/>
+        <path d="M255 170 V216" class="ln"/><path d="M430 170 L405 216" class="ln"/><path d="M490 170 L590 216" class="ln"/><path d="M520 170 L755 216" class="ln ac"/><path d="M665 170 V216" class="ln"/>
+        <path d="M560 143 H770" class="ln ac"/>
+        <path d="M225 270 V316" class="ln"/><path d="M405 270 V316" class="ln"/><path d="M590 270 V316" class="ln"/><path d="M755 270 V316" class="ln"/><path d="M910 270 V316" class="ln"/>
+        <path d="M755 370 L700 410" class="ln ac"/><path d="M560 170 L900 410" class="ln ac" style="opacity:.35"/>
+        <path d="M900 410 Q 960 300 560 150" class="ln ac" style="stroke-dasharray:3 4"/>
+        <text x="930" y="300" class="m" transform="rotate(0)">口の形 0〜1</text>
+      </svg>
+      <p class="small muted" style="margin:12px 0 0">赤い矢印が音声の流れ：ViewModel → VoiceEngine（WAV 生成）→ VoicePlayer（再生しながら音の大きさを通知）→ ViewModel の <code>mouthShape</code> → CharacterPortrait が口の画像を差し替え。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ コードの工夫 ============================ -->
+<section class="sec" id="code">
+  <div class="wrap">
+    <div class="sec-head"><span class="num">05</span><h2>コードで工夫したところ</h2></div>
+    <p class="sec-lead">「なぜそう書いたか」を中心に、実際のコード（抜粋）とあわせて紹介します。コメントは意図（WHY）を日本語で残す方針で、コード中のコメントも実物のままです。</p>
+
+    <!-- 1 -->
+    <div class="hl reveal">
+      <div class="text">
+        <span class="why">01 · 音声エンジンを差し替えられる形で C++ を組み込む</span>
+        <h3>VoiceEngine インターフェース + C++17 JNI ブリッジ</h3>
+        <p>VOICEVOX CORE は C の API しかないので、C++ で JNI の薄い橋を書き、Kotlin 側は <code>VoiceEngine</code> というインターフェースだけを見ています。AquesTalk など別エンジンへの差し替えが仕様上決まっているため、最初から抽象化しました。</p>
+        <ul>
+          <li><b>RAII</b>：<code>GetStringUTFChars</code> の返却をデストラクタに任せ、途中 return でもリークしない。</li>
+          <li><b>失敗は Kotlin の例外に</b>：エラーコードを <code>ThrowNew</code> で <code>IllegalStateException</code> に変換し、Kotlin 側は <code>try/catch</code> だけで扱える。</li>
+          <li><b>ハンドルは jlong</b>：C++ 側の構造体のアドレスを数で往復させ、Kotlin はポインタを知らない。</li>
+          <li><b>Mutex で直列化</b>：合成は重い計算なので <code>Dispatchers.Default</code> + <code>Mutex.withLock</code>。<code>synchronized</code> と違いコルーチンを止めずに順番待ちできる。</li>
+        </ul>
+        <div class="tags"><span>C++17</span><span>CMake</span><span>JNI</span><span>RAII</span><span>Mutex</span><span>DIP</span></div>
+      </div>
+      <div>
+        <div class="code"><div class="head"><span class="dot"></span>app/src/main/cpp/voicevox_jni.cpp<span class="lang">C++</span></div><pre><code data-lang="cpp">/** Kotlin の文字列(jstring)を C の文字列として借りる入れ物、
+ *  デストラクタで必ず返すので、途中で return しても借りっぱなしにならない(RAII)*/
+class Utf8String {
+public:
+    Utf8String(JNIEnv* env, jstring text)
+        : env_(env), text_(text), chars_(env->GetStringUTFChars(text, nullptr)) {}
+    ~Utf8String() { env_->ReleaseStringUTFChars(text_, chars_); }
+    const char* get() const { return chars_; }
+private:
+    JNIEnv* env_; jstring text_; const char* chars_;
+};
+
+/** 失敗していたら Kotlin 側に例外を投げて true を返す*/
+bool throwIfFailed(JNIEnv* env, VoicevoxResultCode result, const char* step) {
+    if (result == VOICEVOX_RESULT_OK) return false;
+    std::string message = std::string(step) + ": " + voicevox_error_result_to_message(result);
+    env->ThrowNew(env->FindClass("java/lang/IllegalStateException"), message.c_str());
+    return true;
+}</code></pre></div>
+        <div class="code"><div class="head"><span class="dot"></span>data/voice/VoiceEngine.kt<span class="lang">Kotlin</span></div><pre><code data-lang="kotlin">/** 文章を声(WAV)に変える係の約束、
+ *  エンジン(VOICEVOX や AquesTalk)を差し替えても画面側を変えなくてよいようにインターフェースにする*/
+interface VoiceEngine {
+    suspend fun synthesize(text: String, voice: VoiceSpec): ByteArray
+    suspend fun synthesizeKana(kana: String, voice: VoiceSpec): ByteArray
+}
+
+/** 2つの合成の共通部分、違うのは AudioQuery の作り方だけなので関数で受け取る、
+ *  合成は重い計算なので、画面のスレッドではなく計算用(Default)のスレッドで行う*/
+private suspend fun synthesizeWith(voice: VoiceSpec,
+                                   createAudioQuery: (Long) -> String): ByteArray = withContext(Dispatchers.Default) {
+    mutex.withLock {
+        val handle = ensureCreated()
+        ensureModelLoaded(handle, voice.model)
+        val audioQuery = createAudioQuery(handle)
+        VoicevoxNative.synthesize(handle, applyVoice(audioQuery, voice), voice.styleId)
+    }
+}</code></pre></div>
+      </div>
+    </div>
+
+    <!-- 2 -->
+    <div class="hl alt reveal">
+      <div class="text">
+        <span class="why">02 · 口パクを「音の大きさ」から作る</span>
+        <h3>再生しながら RMS を測り、口の形に変換する</h3>
+        <p>WAV を一度に流すのではなく、<code>AudioTrack</code>（MODE_STREAM）に 1/30 秒ぶんずつ書き込みます。<code>write()</code> はバッファが空くまで待つので、「いま鳴っている部分」の大きさをそのまま口の形に使えます。</p>
+        <ul>
+          <li><b>WAV ヘッダを自前で読む</b>：チャンクを先頭から走査し、<code>fmt</code> からサンプリングレート、<code>data</code> から音の位置を取る。LIST など知らないチャンクは読み飛ばす。</li>
+          <li><b>境目は定数に</b>：0.15 / 0.4 / 0.7 で「閉じ・う・お・あ」。マジックナンバーは必ず名前を付ける。</li>
+          <li><b>キャンセルに強い</b>：<code>isActive</code> を見て次の切れ目で止まり、<code>finally</code> で必ず口を閉じて <code>pause → flush → stop → release</code>。タブを離れた瞬間に黙る。</li>
+          <li><b>再コンポーズを抑える</b>：口の形は高頻度で変わるので、画面全体ではなく <code>Canvas</code> の描画だけが更新されるよう、値ではなく <code>StateFlow</code> / ラムダで渡す。</li>
+        </ul>
+        <div class="tags"><span>AudioTrack</span><span>RMS</span><span>ByteBuffer</span><span>Coroutines</span><span>Canvas</span></div>
+      </div>
+      <div>
+        <div class="code"><div class="head"><span class="dot"></span>data/voice/VoicePlayer.kt<span class="lang">Kotlin</span></div><pre><code data-lang="kotlin">/** 1秒の音を何個に切って流すか、30 なら 1/30 秒ごとに音の大きさを知らせるので、口パクが画面の動きに間に合う*/
+private const val ChunksPerSecond = 30
+
+val chunk = ShortArray(format.sampleRate / ChunksPerSecond)
+// isActive を見るので、キャンセルされたら次の切れ目で止まる
+while (samples.hasRemaining() &amp;&amp; isActive) {
+    val count = minOf(chunk.size, samples.remaining())
+    samples.get(chunk, 0, count)
+    onLevel(levelOf(chunk, count))
+    // write() はバッファが空くまで待つので、音が鳴る速さに合わせて進む
+    track.write(chunk, 0, count)
+}
+
+/** 切れ目の音の大きさを RMS(2乗の平均の平方根)で求め、0〜1 にそろえる*/
+private fun levelOf(samples: ShortArray, count: Int): Float {
+    var sum = 0.0
+    for (index in 0 until count) {
+        val sample = samples[index] / Short.MAX_VALUE.toDouble()
+        sum += sample * sample
+    }
+    val rms = sqrt(sum / count).toFloat()
+    return (rms * LevelGain).coerceIn(SilentLevel, LoudestLevel)
+}</code></pre></div>
+        <div class="code"><div class="head"><span class="dot"></span>ui/character/MouthShape.kt<span class="lang">Kotlin</span></div><pre><code data-lang="kotlin">/** 声の大きさから口の形を選ぶ、when は上から順に調べるので、
+ *  小さい境目から並べると「どの境目より小さいか」で決まる*/
+fun forLevel(level: Float): String = when {
+    level &lt; SmallMouthLevel -&gt; Closed   // 0.15
+    level &lt; MiddleMouthLevel -&gt; Small   // 0.4  「う」
+    level &lt; LargeMouthLevel -&gt; Middle   // 0.7  「お」
+    else -&gt; Large                        //      「あ」
+}</code></pre></div>
+      </div>
+    </div>
+
+    <!-- demo: lipsync -->
+    <div class="demo reveal" style="margin:-10px 0 40px">
+      <h3>🎛 ブラウザで試す：音の大きさ → 口の形</h3>
+      <p class="sub">アプリと同じ境目（0.15 / 0.4 / 0.7）と同じ立ち絵パーツ（PSD から書き出した base + 口の PNG）を使って、口の切り替えを再現しています。スライダーを動かすか「話す」を押してください。</p>
+      <div class="lip">
+        <canvas id="lipCanvas" width="440" height="506" aria-label="東北きりたんの立ち絵。音の大きさに合わせて口が変わる"></canvas>
+        <div>
+          <div class="meter"><i id="lipMeter"></i></div>
+          <div class="marks"><span style="left:15%">0.15</span><span style="left:40%">0.4</span><span style="left:70%">0.7</span></div>
+          <input id="lipRange" type="range" min="0" max="100" value="0" aria-label="音の大きさ">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px">
+            <button class="btn primary" id="lipPlay">▶ 話す（3秒）</button>
+            <span class="shape">MouthShape.forLevel(<b id="lipLevel">0.00</b>) → <b id="lipShape">closed</b></span>
+          </div>
+          <p class="small muted" style="margin:12px 0 0">アプリでは、この値が <code>StateFlow&lt;String&gt;</code> として ViewModel から流れ、<code>CharacterPortrait</code> が該当する口画像を <code>drawImage</code> で土台の上に重ねます。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 -->
+    <div class="hl reveal">
+      <div class="text">
+        <span class="why">03 · キャラクターを「コード」ではなく「データ」で持つ</span>
+        <h3>PSD → JSON の書き出しツールと、1色から作る配色</h3>
+        <p>6人分の立ち絵は PSDTool 形式の PSD です。Python（psd-tools）でレイヤーを切り替えながら「口なしの土台」「口の差分 6 種」「目の差分 5 種」を書き出し、貼り付け位置・バストアップの切り抜き・声・口調・テーマカラーを <code>character.json</code> にまとめます。</p>
+        <ul>
+          <li><b>キャラ追加 = PSD を置いてツールを実行するだけ</b>。Kotlin のコードは1行も変えない。</li>
+          <li><b>セリフも JSON</b>：語尾（〜です／〜なのだ）はキャラごとに違うので、文全体を <code>%1$d</code> 付きの書式で持たせる。読み間違えやすい文は AquesTalk 風のカナも併記。</li>
+          <li><b>配色は seedColor 1色から</b>：HSL の色相を保ったまま明るさ（トーン）を変えて Material 3 の <code>ColorScheme</code> を組み立てる。彩度の下限を 0.35 にして、灰色っぽい色でも「色が付く」ようにした。</li>
+          <li><b>知らないキーは無視</b>：<code>ignoreUnknownKeys = true</code> でツール側に項目を足しても古いアプリが落ちない。</li>
+        </ul>
+        <div class="tags"><span>psd-tools</span><span>kotlinx.serialization</span><span>HSL</span><span>Material 3 tonal palette</span><span>BlendMode.DstIn</span></div>
+      </div>
+      <div>
+        <div class="code"><div class="head"><span class="dot"></span>ui/theme/CharacterColorScheme.kt<span class="lang">Kotlin</span></div><pre><code data-lang="kotlin">/** 彩度(色の鮮やかさ、0〜1)の決まり、
+ *  元の色が灰色に近くても色が付くように最低値を決め、
+ *  secondary や背景(neutral)は元の鮮やかさを何倍に弱めるかで落ち着いた色にする*/
+private const val MinSaturation = 0.35F
+private const val SecondarySaturationScale = 0.4F
+private const val NeutralSaturationScale = 0.12F
+
+/** 1つの色から、色相(色合い)は同じまま明るさだけを変えた色を作る道具*/
+private class TonalPalette(seed: Color) {
+    private val hue: Float
+    private val saturation: Float
+    init {
+        // colorToHSL は渡した配列に結果を書き込む(C++ の出力引数と同じ)
+        val hsl = FloatArray(HslComponentCount)
+        ColorUtils.colorToHSL(seed.toArgb(), hsl)
+        hue = hsl[HueIndex]
+        saturation = hsl[SaturationIndex].coerceAtLeast(MinSaturation)
+    }
+    fun primary(lightness: Int): Color = tone(lightness, PrimarySaturationScale)
+    fun neutral(lightness: Int): Color = tone(lightness, NeutralSaturationScale)
+    private fun tone(lightness: Int, saturationScale: Float): Color =
+        Color(ColorUtils.HSLToColor(floatArrayOf(hue, saturation * saturationScale, lightness / 100.0F)))
+}</code></pre></div>
+        <div class="code"><div class="head"><span class="dot"></span>assets/characters/zundamon/character.json<span class="lang">JSON</span></div><pre><code data-lang="json">{
+  "id": "zundamon", "name": "ずんだもん",
+  "mouths": { "closed": { "file": "mouth_closed.png", "x": 457, "y": 544 }, "a": { … } },
+  "eyes":   { "open": { … }, "closed": { … }, "smile": { … }, "sleepy": { … }, "jito": { … } },
+  "bust":   { "left": 59, "top": 0, "right": 863, "bottom": 924 },
+  "voice":  { "model": "0.vvm", "styleId": 3, "speedScale": 1.0, "pitchScale": 0.0 },
+  "theme":  { "seedColor": "#7FB04A" },
+  "speech": {
+    "totalLine": "総タスクは%1$d件なのだ",
+    "lastTaskLine": "%1$sから%2$sなのだ",
+    "cheerKana": "キョ'オモイチニチ/ガンバル'ノダ",
+    "reactions": { "allDone": "ぜんぶ終わったのだ！えらいのだ", … }
+  }
+}</code></pre></div>
+      </div>
+    </div>
+
+    <!-- demo: theme -->
+    <div class="demo reveal" style="margin:-10px 0 40px">
+      <h3>🎨 ブラウザで試す：seedColor 1色 → 配色一式</h3>
+      <p class="sub">各キャラの JSON にある seedColor から、アプリと同じ計算（HSL・彩度下限 0.35・Material 3 のトーン）で色を作ります。選ぶと、このページのアクセント色も同じ計算で変わります。</p>
+      <div class="chips" id="chips"></div>
+      <div class="swatches" id="swatches"></div>
+    </div>
+
+    <!-- 4 -->
+    <div class="hl alt reveal">
+      <div class="text">
+        <span class="why">04 · 「何を話すか」を純粋な関数に閉じ込める</span>
+        <h3>台本（TodaySpeechScript）は画面も音声も知らない</h3>
+        <p>セリフの組み立ては <code>object TodaySpeechScript</code> に集め、入力はタスク一覧・キャラのセリフ定義・時刻だけ。Android の部品に触らないので、端末なしの JUnit で一瞬で確かめられます（9 本のテスト）。</p>
+        <ul>
+          <li><b>表示用と読み上げ用を分ける</b>：「7:30」は画面に出し、音声には「7時30分」を渡す。さらに読みを固定したい行は <code>spokenKana</code> を持つ。</li>
+          <li><b>乱数は外から渡す</b>：雑談の選択は <code>Random</code> を引数で受け取るので、テストで結果を固定できる。前回と同じ雑談は候補から外す。</li>
+          <li><b>英語はカタカナに</b>：<code>EnglishKanaConverter</code> は「読み表の読み込み方」を関数で受け取り、本番は assets の 2 万語 JSON、テストは 3 語の表を渡す。</li>
+          <li><b>仕様変更に 1 か所で対応</b>：「完了済みは読まない」という変更は <code>remainingTasksOf()</code> を 1 つ足し、ViewModel も同じ関数を呼ぶ形にした（DRY）。</li>
+        </ul>
+        <div class="tags"><span>Pure function</span><span>Dependency injection</span><span>JUnit 4</span><span>DRY</span></div>
+      </div>
+      <div>
+        <div class="code"><div class="head"><span class="dot"></span>ui/today/TodaySpeechScript.kt<span class="lang">Kotlin</span></div><pre><code data-lang="kotlin">/** キャラのセリフ1行分、表示用(display)と読み上げ用(spoken)を分けているのは、
+ *  "7:30" を音声エンジンにそのまま渡すと正しく読めないため*/
+data class SpeechLine(val display: String,
+                      val spoken: String,
+                      val spokenKana: String? = null,
+                      val expression: Expression? = null)
+
+/** その日初めて開いたときのセリフ、「残りのタスク数 → タスクを1件ずつ → 応援」の順に並べる、
+ *  終わっているタスクは読まないので、先に未完了のものだけにしぼる*/
+fun firstLaunchLines(tasks: List&lt;Task&gt;, speech: SpeechSpec): List&lt;SpeechLine&gt; {
+    val remainingTasks = remainingTasksOf(tasks)
+    if (remainingTasks.isEmpty()) {
+        return emptyList()
+    }
+    return listOf(plainLine(speech.totalLine.format(remainingTasks.size))) +
+        taskLines(remainingTasks, speech) +
+        cheerLine(speech)
+}
+
+/** まだ終わっていないタスクだけを返す、読み上げる対象を決めるのはここ1か所にする*/
+fun remainingTasksOf(tasks: List&lt;Task&gt;): List&lt;Task&gt; = tasks.filter { task -&gt; !task.isCompleted }</code></pre></div>
+        <div class="code"><div class="head"><span class="dot"></span>test/…/TodaySpeechScriptTest.kt<span class="lang">Kotlin</span></div><pre><code data-lang="kotlin">/** 終わっているタスクは件数にも数えず、1件ずつの読み上げからも外す*/
+@Test
+fun firstLaunchLines_skipsCompletedTasks() {
+    val lines = TodaySpeechScript.firstLaunchLines(tasks = listOf(task(1, 7, 30, isCompleted = true),
+                                                                  task(2, 9, 0),
+                                                                  task(3, 20, 0)),
+                                                   speech = TestSpeech)
+
+    assertEquals(listOf("総タスクは2件なのだ", "9:00からタスク2", "20:00からタスク3なのだ", "今日も一日がんばるのだ"),
+                 lines.map { line -&gt; line.display })
+}</code></pre></div>
+      </div>
+    </div>
+
+    <!-- 5 -->
+    <div class="hl reveal">
+      <div class="text">
+        <span class="why">05 · 「今日」が変わる瞬間まで面倒を見る</span>
+        <h3>日付をまたぐ Flow と、通知予約の自動同期</h3>
+        <p>アプリを開いたまま 0 時を過ぎると「今日」がずれる、という不具合を設計レビューで見つけ、<code>observeToday()</code> という Flow にしました。次の 0 時までの時間だけ <code>delay</code> して新しい日付を流すので、今日のタスクも通知の予約も自動で切り替わります。</p>
+        <ul>
+          <li><b>予約の計算は純粋に</b>：<code>ReminderPlan.alarmsFor()</code> は「通知 ON・未完了・今より後」だけを残す関数。単体テスト 4 本。</li>
+          <li><b>監視は 1 か所</b>：<code>ReminderSync</code> がタスクと設定を <code>combine</code> し、変わるたびに <code>replaceAll()</code>。画面ごとに予約コードを書かない。</li>
+          <li><b>AlarmManager の制約を吸収</b>：正確なアラームの許可がなければ 10 分幅の <code>setWindow</code> に落とす。再起動後は <code>BootReceiver</code> から <code>syncOnce()</code>。</li>
+        </ul>
+        <div class="tags"><span>Flow</span><span>flatMapLatest</span><span>combine</span><span>AlarmManager</span><span>SupervisorJob</span></div>
+      </div>
+      <div>
+        <div class="code"><div class="head"><span class="dot"></span>data/time/Today.kt<span class="lang">Kotlin</span></div><pre><code data-lang="kotlin">/** 今日の日付を流し、日付が変わった瞬間(0時)に次の日付を流す、
+ *  アプリを開いたまま日をまたいでも「今日」の表示や通知の予約が新しい日に切り替わる*/
+fun observeToday(): Flow&lt;LocalDate&gt; = flow {
+    while (true) {
+        val now = LocalDateTime.now()
+        emit(now.toLocalDate())
+        // 次の0時までの時間だけ待つ、delay() はスレッドを止めずに待つので他の処理の邪魔をしない
+        val nextMidnight = now.toLocalDate().plusDays(1).atStartOfDay()
+        delay(Duration.between(now, nextMidnight).toMillis())
+    }
+}</code></pre></div>
+        <div class="code"><div class="head"><span class="dot"></span>data/reminder/ReminderSync.kt<span class="lang">Kotlin</span></div><pre><code data-lang="kotlin">/** アプリが動いている間ずっと見張りを続ける、VoiDoApplication.onCreate() から1回だけ呼ぶ*/
+fun start() {
+    scope.launch {
+        observeToday()
+            // 日付が変わったら、前の日の見張りをやめて新しい「今日から先」の見張りに切り替える
+            .flatMapLatest { today -&gt; observeAlarmsFrom(today) }
+            .collect { alarms -&gt; reminderScheduler.replaceAll(alarms) }
+    }
+}
+
+/** タスクか通知設定のどちらかが変わるたびに、両方の最新値で計算し直す*/
+private fun observeAlarmsFrom(today: LocalDate): Flow&lt;List&lt;ReminderAlarm&gt;&gt; =
+    combine(taskRepository.observeReminderTasksFrom(today),
+            settingsRepository.isNotificationEnabled) { tasks, isNotificationEnabled -&gt;
+        ReminderPlan.alarmsFor(tasks, LocalDateTime.now(), isNotificationEnabled)
+    }</code></pre></div>
+      </div>
+    </div>
+
+    <!-- 6 -->
+    <div class="hl alt reveal">
+      <div class="text">
+        <span class="why">06 · UI の細部にも「理由のある書き方」を</span>
+        <h3>スワイプ削除・並び順・再コンポーズの抑制</h3>
+        <p>見た目の部品でも、状態の持ち方と更新のコストを意識しています。</p>
+        <ul>
+          <li><b>開き具合はラムダで渡す</b>：スワイプ中は 1 フレームごとに値が変わる。<code>revealFraction: () -&gt; Float</code> にして <code>drawBehind</code> / <code>graphicsLayer</code> の中で読むと、再コンポーズせず描画だけが更新される。</li>
+          <li><b>並び順は 1 行の純粋関数</b>：「未完了が上・完了が下、各時刻順」は <code>sortedBy { isCompleted }</code>。安定ソートなので Room の時刻順を崩さない。SQL ではなく Kotlin にしたのは、単体テストで一瞬で確かめるため。</li>
+          <li><b>行の移動はタダで付いてくる</b>：<code>LazyColumn</code> に <code>key = id</code> と <code>animateItem()</code> を付けてあるので、チェックした行はふわっと下へ移動する。</li>
+          <li><b>状態ホイスティング</b>：下部バーもスイッチも自分で状態を持たず、<code>selected</code> と <code>onSelected</code> を上から受け取る。Preview で好きな状態を表示でき、使い回せる。</li>
+        </ul>
+        <div class="tags"><span>anchoredDraggable</span><span>drawBehind</span><span>graphicsLayer</span><span>stable sort</span><span>state hoisting</span></div>
+      </div>
+      <div>
+        <div class="code"><div class="head"><span class="dot"></span>ui/today/TodayTaskList.kt<span class="lang">Kotlin</span></div><pre><code data-lang="kotlin">/** 行の後ろにある削除ボタン、開いた割合に合わせて赤い背景が右から伸び、アイコンが濃く大きくなる、
+ *  revealFraction を値でなく関数で受け取るのは、スワイプ中に画面全体を作り直さず、描画だけ更新するため*/
+@Composable
+private fun DeleteAction(onClick: () -&gt; Unit,
+                         revealFraction: () -&gt; Float,
+                         modifier: Modifier = Modifier) {
+    Box(modifier = modifier.drawBehind {
+            val revealedWidth = DeleteActionWidth.toPx() * revealFraction()
+            drawRect(color = colors.errorContainer,
+                     topLeft = Offset(size.width - revealedWidth, 0.0F),
+                     size = Size(revealedWidth, size.height))
+        }, …) {
+        Column(modifier = Modifier.graphicsLayer {
+            val fraction = revealFraction()
+            alpha = fraction
+            scaleX = DeleteIconMinScale + (1.0F - DeleteIconMinScale) * fraction
+            scaleY = scaleX
+        }) { … }
+    }
+}</code></pre></div>
+        <div class="code"><div class="head"><span class="dot"></span>data/task/TaskDisplayOrder.kt<span class="lang">Kotlin</span></div><pre><code data-lang="kotlin">/** 画面に並べる順にタスクを並べ替える関数、
+ *  未完了を上、完了を下にし、それぞれの中は受け取った順(時刻順)のままにする、
+ *  sortedBy は安定ソート(同じ値どうしは元の順番を保つ)なので、isCompleted だけで並べ替えれば時刻順はくずれない*/
+fun displayOrderOf(tasks: List&lt;Task&gt;): List&lt;Task&gt; = tasks.sortedBy { task -&gt; task.isCompleted }</code></pre></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 設計の考え方 ============================ -->
+<section class="sec" id="design">
+  <div class="wrap">
+    <div class="sec-head"><span class="num">06</span><h2>設計の考え方・自分に課したルール</h2></div>
+    <p class="sec-lead">「あとで読む人（未来の自分を含む）が、なぜそうなっているか分かるコード」を目標にしています。チーム開発を想定して、すべてのファイルで同じ決まりを守りました。</p>
+    <div class="rules">
+      <div class="rule reveal"><span class="n">01</span><div><b>層を分け、依存は内側へ（MVVM + Repository + DI）</b><p>画面は ViewModel の <code>StateFlow</code> を見るだけ。ViewModel はインターフェース（TaskRepository / VoiceEngine…）だけを知り、Hilt の <code>@Binds</code> が実装を差し込む。テストは偽物に差し替え。</p></div></div>
+      <div class="rule reveal"><span class="n">02</span><div><b>判断は純粋な関数に切り出す</b><p>台本・通知の対象・表情・並び順・カレンダーの日付計算は Android に依存しない関数（<code>xxxOf()</code>）にし、単体テストで確かめる。</p></div></div>
+      <div class="rule reveal"><span class="n">03</span><div><b>マジックナンバーを書かない</b><p>見た目の数値はファイル先頭の定数に、名前は <code>[何の][性質][単位]</code>（例：<code>BlinkIntervalMinMillis</code>、<code>TaskBarAccentWidth</code>）。ただの数のときだけ単位を付ける。</p></div></div>
+      <div class="rule reveal"><span class="n">04</span><div><b>コメントは WHY を書く</b><p>「何をしているか」はコードが語る。「なぜ Mutex で synchronized ではないのか」「なぜ CancellationException を先に catch するのか」をコメントに残す。</p></div></div>
+      <div class="rule reveal"><span class="n">05</span><div><b>入れ子は 2 段まで</b><p>3 段目になったら関数に分ける（<code>VoiDoScaffold</code> / <code>VoiDoTabContent</code> / <code>TodayTab</code>…）。長い引数リストは名前付き引数で縦に揃える。</p></div></div>
+      <div class="rule reveal"><span class="n">06</span><div><b>命名規則を文書化して守る</b><p>Boolean は is/has/can/should、イベントは onXxx、Flow は observeXxx、テストは <code>対象_ふるまい</code>。ラムダ引数は必ず名前を付け <code>it</code> を使わない。略語を使わない（<code>previousDescription</code>）。</p></div></div>
+      <div class="rule reveal"><span class="n">07</span><div><b>YAGNI は「仕様にないもの」にだけ</b><p>仕様で決まっている機能（別の音声エンジン、口パク）は「今必要なもの」として最初から構造を用意する。「いつか使うかも」のフックは作らない。</p></div></div>
+      <div class="rule reveal"><span class="n">08</span><div><b>仕様変更は、消す・直す・確かめるをその日に</b><p>一年のタスクからキャラを外したときは、画面 → つなぎ → データ型 → 書き出しツールまで逆順にたどって不要物を全部消した。変更には必ずテストを添える。</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 開発プロセス ============================ -->
+<section class="sec" id="process">
+  <div class="wrap">
+    <div class="sec-head"><span class="num">07</span><h2>開発プロセスと学び方</h2></div>
+    <p class="sec-lead">もともとは C++（シングルスレッド）の経験しかなく、Kotlin・Compose・コルーチン・Android はこのプロジェクトで初めて触れました。「1 機能 = 1 章」の自作教科書を 35 章ぶん作り、設計 → 写経 → 解説 → テストの順で積み上げています。</p>
+    <div class="grid2">
+      <div class="card reveal">
+        <h3><span class="ico">📚</span>自作教科書 35 章で積み上げる</h3>
+        <p>章ごとに「この章で作るもの／決めたことと理由／写経するコード／動作確認／全体の地図／関数ごとの解説／名前の付け方」を HTML でまとめ、別冊として設計原則（SOLID・DRY・KISS・YAGNI など 28 項目）と技術マップ、Kotlin 文法リファレンス（C++ との比較付き）を作成。</p>
+        <p style="margin-top:8px">第 22 章「一年のタスクからキャラを外す」、第 30 章「設計を見直してテストで確かめる」、第 33 章「Lint と実機テスト」、第 35 章「終わったタスクは読まず、下に並べる」のように、<b>作り直しや品質の章</b>も意図的に入れています。</p>
+      </div>
+      <div class="card reveal">
+        <h3><span class="ico">🗓</span>タイムライン</h3>
+        <ul class="timeline">
+          <li><span class="d">2026-10-22</span><b>企画</b><p>「キャラが話す ToDo」を決める。最初は Flutter を検討。</p></li>
+          <li><span class="d">2026-10-23</span><b>Kotlin + Compose へ</b><p>Android ネイティブに方針転換。教科書形式で学習開始。</p></li>
+          <li><span class="d">2026-10-30</span><b>音声エンジンの検証</b><p>VOICEVOX CORE（C++/JNI）と AquesTalk10 の 2 本のサンプルで、読み上げと口パクをエミュレータで確認。</p></li>
+          <li><span class="d">2026-11-01〜03</span><b>VoiDo 本体 第 1〜34 章</b><p>タブ・カレンダー・入力シート・Room・キャラ・音声・口パク・表情・配色・テスト・Lint・通知。</p></li>
+          <li><span class="d">2026-11-04</span><b>第 35 章・ポートフォリオ</b><p>完了済みタスクの扱いを変更し、テストと教科書を同時に更新。</p></li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 style="font-size:20px;font-weight:900;margin:36px 0 14px">つまずいたこと と 解決</h3>
+    <div class="trouble">
+      <div class="row reveal"><div class="q"><b>PROBLEM</b>VOICEVOX CORE の <code>.so</code> を Android に組み込むと、PC のパスが <code>DT_NEEDED</code> に焼き込まれて実機で見つからない。</div><div class="a"><b>SOLVED</b><code>llvm-readelf -d</code> で依存を確認。配布 <code>.so</code> に SONAME が無いのが原因と分かり、CMake の IMPORTED ライブラリに <code>IMPORTED_NO_SONAME TRUE</code> を指定。</div></div>
+      <div class="row reveal"><div class="q"><b>PROBLEM</b>ONNX Runtime を実行時に読み込む API が、APK 内の <code>.so</code> を開けない。</div><div class="a"><b>SOLVED</b>APK のライブラリは展開されないため、Kotlin 側で先に <code>System.loadLibrary("voicevox_onnxruntime")</code> し、C++ にはファイル名だけ（<code>libvoicevox_onnxruntime.so</code>）を渡して dlopen させる。</div></div>
+      <div class="row reveal"><div class="q"><b>PROBLEM</b>「爪切り」「風邪薬」などを読み間違える。</div><div class="a"><b>SOLVED</b>Open JTalk の辞書を pyopenjtalk-plus の辞書に差し替え（SHA-256 で出所を記録）。それでも固定したい文は AquesTalk 風記法のカナを JSON に併記し、<code>synthesizeKana()</code> で読ませる。辞書の版が上がったら古い版のフォルダを端末から消す処理も追加。</div></div>
+      <div class="row reveal"><div class="q"><b>PROBLEM</b>アプリを開いたまま日付が変わっても「今日」が昨日のまま。時計も古い時刻のまま。</div><div class="a"><b>SOLVED</b>設計レビューで発見。<code>observeToday()</code> Flow と、分が変わるたびに再描画する <code>rememberCurrentTime()</code> を導入し、通知予約も <code>flatMapLatest</code> で切り替え。</div></div>
+      <div class="row reveal"><div class="q"><b>PROBLEM</b>口パク中に画面全体が再コンポーズされてカクつく。</div><div class="a"><b>SOLVED</b>高頻度で変わる値（口の形・スワイプ量）は <code>StateFlow</code>／ラムダで渡し、<code>Canvas</code> や <code>graphicsLayer</code> の中で読む。<code>CompositingStrategy.Offscreen</code> で <code>DstIn</code> のぼかしが背景まで透過する問題も解決。</div></div>
+      <div class="row reveal"><div class="q"><b>PROBLEM</b>AGP 9 の設定キャッシュで <code>doFirst { check(...) }</code> が禁止され、ライブラリ存在チェックが書けない。</div><div class="a"><b>SOLVED</b>チェックを設定時（configuration time）に移動し、<code>sourceSets.main.jniLibs.directories.add()</code> の新しい書き方に合わせた。</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 品質 ============================ -->
+<section class="sec" id="quality">
+  <div class="wrap">
+    <div class="sec-head"><span class="num">08</span><h2>品質の確かめ方</h2></div>
+    <p class="sec-lead">「動いた気がする」で終わらせないために、判断ロジックは単体テスト、Room と画面は実機テスト、口パクはスクリーンショットの画素差分で確認しました。</p>
+    <div class="grid2" style="grid-template-columns: 1.45fr 1fr">
+      <div class="reveal">
+        <table class="plain">
+          <thead><tr><th>テスト</th><th>何を確かめるか</th><th>本数</th></tr></thead>
+          <tbody>
+            <tr><td><code>TodaySpeechScriptTest</code></td><td>台本の並び・あいさつの境目・雑談の重複回避・<b>完了済みを読まない</b></td><td>11</td></tr>
+            <tr><td><code>ReminderPlanTest</code></td><td>通知 ON・未完了・未来のタスクだけを予約、本物の JSON で本文を生成</td><td>4</td></tr>
+            <tr><td><code>EnglishKanaConverterTest</code></td><td>英単語→カタカナ、辞書に無い語は 1 文字ずつ</td><td>4</td></tr>
+            <tr><td><code>TodayExpressionTest</code></td><td>表情の優先順位・夜の判定（日付またぎ）</td><td>4</td></tr>
+            <tr><td><code>CharacterSpecTest</code> / <code>TaskTitleRulesTest</code> / <code>CalendarDaysTest</code> / <code>TaskDisplayOrderTest</code></td><td>JSON の読み込み・入力できる文字・月の日付計算・<b>完了を下に並べる</b></td><td>10</td></tr>
+            <tr><td><code>TaskDaoTest</code> / <code>AddTaskSheetTest</code>（androidTest）</td><td>Room の読み書きと移行、入力シートの有効／無効</td><td>6</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card reveal">
+        <h3><span class="ico">✅</span>そのほかの確認</h3>
+        <p><span class="ok">Lint 警告 0</span>：第 33 章で全警告を解消（試し聞きの止め忘れ、不要な再コンポーズなど）。</p>
+        <p><span class="ok">adb による自動検証</span>：<code>adb exec-out screencap</code> を連写し、口の領域の画素差分で「口が動いている」ことを数値で確認（このページの口パク 4 コマもその出力です）。</p>
+        <p><span class="ok">ライブラリの出所を記録</span>：VOICEVOX CORE・ONNX Runtime・音声モデル・辞書は公式リリースの URL と SHA-256 を <code>SOURCES.md</code> に残し、ライセンス文も同梱。</p>
+        <p><span class="ok">古い端末への配慮</span>：minSdk 26。Android 12 以降の正確なアラーム許可、13 以降の通知許可は実行時に確認し、断られてもアプリは動く。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 今後 ============================ -->
+<section class="sec" id="next">
+  <div class="wrap">
+    <div class="sec-head"><span class="num">09</span><h2>現在の状況と今後</h2></div>
+    <div class="grid2">
+      <div class="card reveal">
+        <h3><span class="ico">📍</span>いま</h3>
+        <p>全 35 ステップの設計・実装・テストを検証用プロジェクトで完了し、エミュレータで動作確認済み。現在は同じ内容を教科書に沿って本番プロジェクトへ書き写しながら、細部を調整しています。</p>
+      </div>
+      <div class="card reveal">
+        <h3><span class="ico">🧭</span>これから</h3>
+        <p>・<b>AquesTalk10 エンジンの追加</b>：<code>VoiceEngine</code> を実装するだけで切り替えられる構造は用意済み。<br>・<b>実機での検証とリリースビルド</b>：R8 の最適化設定（keepRules）の確認。<br>・<b>キャラの追加</b>：PSD を置いてツールを実行するだけで増やせる設計を活かす。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ クレジット ============================ -->
+<section class="sec" id="credits">
+  <div class="wrap">
+    <div class="sec-head"><span class="num">10</span><h2>クレジット・使用素材</h2></div>
+    <div class="card reveal">
+      <table class="plain">
+        <tbody>
+          <tr><th>音声合成</th><td>VOICEVOX CORE 0.17.1 / VOICEVOX ONNX Runtime 1.17.3（<a href="https://voicevox.hiroshiba.jp/" target="_blank" rel="noopener">VOICEVOX</a>）。音声：VOICEVOX:ずんだもん、VOICEVOX:四国めたん、VOICEVOX:東北きりたん、VOICEVOX:東北ずん子、VOICEVOX:東北イタコ、VOICEVOX:中国うさぎ</td></tr>
+          <tr><th>キャラクター</th><td>東北ずん子・ずんだもんプロジェクト（SSS 合同会社）および関連キャラクターの公式配布素材を、各キャラクターの利用規約（非商用・クレジット表記）の範囲で使用しています。</td></tr>
+          <tr><th>辞書・読み</th><td>Open JTalk 辞書（NAIST-jdic）、pyopenjtalk-plus 辞書、英単語→カタカナ読み表は e2k（C2K モデル）と wordfreq から生成（Wiktionary・JMdict/EDICT：CC BY-SA）。</td></tr>
+          <tr><th>開発環境</th><td>Android Studio Rabbit 1、Gradle 9.6、JDK 25、NDK 28 / CMake 3.22、Python 3.13（psd-tools・Pillow・e2k）。</td></tr>
+        </tbody>
+      </table>
+      <p class="small muted" style="margin:12px 0 0">このページのスクリーンショットは開発中のビルドのものです。アプリは学習・ポートフォリオ目的で開発しており、商用配布の予定はありません。</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div><b style="color:var(--text)">VoiDo</b> · Android アプリ ポートフォリオ · 最終更新 2026-11-04</div>
+    <div>GitHub: <a href="https://github.com/kd1363656" target="_blank" rel="noopener">@kd1363656</a> · 制作：kd1363656（神戸電子専門学校 在学）</div>
+  </div>
+</footer>
+<button class="totop" id="totop" aria-label="ページの先頭へ">↑</button>
+
+<script>
+(function () {
+  "use strict";
+  var root = document.documentElement;
+
+  /* ---------- theme ---------- */
+  try {
+    var saved = localStorage.getItem("voido-portfolio-theme");
+    if (saved === "light" || saved === "dark") root.setAttribute("data-theme", saved);
+  } catch (e) {}
+  document.getElementById("theme").addEventListener("click", function () {
+    var current = root.getAttribute("data-theme");
+    if (!current) current = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    var next = current === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("voido-portfolio-theme", next); } catch (e) {}
+    applySeed(currentSeed);
+  });
+  function isDark() {
+    var t = root.getAttribute("data-theme");
+    if (t) return t === "dark";
+    return matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+
+  /* ---------- reveal on scroll ---------- */
+  var io = ("IntersectionObserver" in window) ? new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } });
+  }, { rootMargin: "0px 0px 25% 0px" }) : null;
+  Array.prototype.forEach.call(document.querySelectorAll(".reveal"), function (el) { io ? io.observe(el) : el.classList.add("in"); });
+
+  /* ---------- nav highlight & to-top ---------- */
+  var links = Array.prototype.slice.call(document.querySelectorAll("#nav a"));
+  var secs = links.map(function (a) { return document.querySelector(a.getAttribute("href")); });
+  var totop = document.getElementById("totop");
+  function onScroll() {
+    var y = scrollY + 90, idx = -1;
+    secs.forEach(function (s, i) { if (s && s.offsetTop <= y) idx = i; });
+    links.forEach(function (a, i) { a.classList.toggle("on", i === idx); });
+    totop.classList.toggle("show", scrollY > 600);
+  }
+  addEventListener("scroll", onScroll, { passive: true }); onScroll();
+  totop.addEventListener("click", function () { scrollTo({ top: 0, behavior: "smooth" }); });
+
+  /* ---------- tiny syntax highlighter ---------- */
+  var KW = {
+    kotlin: "package|import|class|data|object|interface|fun|val|var|private|internal|override|suspend|return|if|else|when|while|for|in|is|as|null|true|false|this|try|catch|finally|throw|const|init|by|lazy|enum|abstract|open|companion|sealed|inline|get|set",
+    cpp: "class|public|private|const|char|bool|return|if|else|true|false|nullptr|auto|new|delete|static_cast|reinterpret_cast|extern|namespace|constexpr|struct|void|long|int|std",
+    json: "true|false|null"
+  };
+  function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  function highlight(code, lang) {
+    var src = code.textContent, out = "", tokens = [];
+    // コメントと文字列を先に切り出し、残りは1回の正規表現でまとめて色付けする(置換結果を再度置換しないため)
+    var re = /(\/\*[\s\S]*?\*\/|\/\/[^\n]*|"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*')/g, m, last = 0;
+    while ((m = re.exec(src))) { tokens.push([src.slice(last, m.index), false]); tokens.push([m[0], true]); last = m.index + m[0].length; }
+    tokens.push([src.slice(last), false]);
+    var word = new RegExp("(@\\w+)|\\b(\\d+(?:\\.\\d+)?[FfLl]?)\\b|\\b(" + (KW[lang] || "null") + ")\\b|\\b([A-Z][A-Za-z0-9]+)\\b", "g");
+    tokens.forEach(function (t) {
+      if (t[1]) { out += (t[0][0] === "/" ? '<span class="c">' : '<span class="s">') + esc(t[0]) + "</span>"; return; }
+      out += t[0].replace(word, function (all, an, num, kw, type) {
+        var cls = an ? "a" : num ? "n" : kw ? "k" : "t";
+        return '<span class="' + cls + '">' + all + "</span>";
+      }).split(/(<span class="[ankt]">|<\/span>)/).map(function (part, i) { return (i % 2) ? part : esc(part); }).join("");
+    });
+    code.innerHTML = out;
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("pre > code[data-lang]"), function (c) { highlight(c, c.getAttribute("data-lang")); });
+
+  /* ---------- lip-sync demo (same thresholds & parts as the app) ---------- */
+  var SmallMouthLevel = 0.15, MiddleMouthLevel = 0.4, LargeMouthLevel = 0.7;
+  function forLevel(level) { return level < SmallMouthLevel ? "closed" : level < MiddleMouthLevel ? "u" : level < LargeMouthLevel ? "o" : "a"; }
+  var crop = { left: 59, top: 0, right: 863, bottom: 924 };
+  var parts = { closed: { file: "mouth_closed.png", x: 457, y: 544 }, u: { file: "mouth_u.png", x: 464, y: 548 }, o: { file: "mouth_o.png", x: 457, y: 540 }, a: { file: "mouth_a.png", x: 449, y: 530 } };
+  var eyes = { file: "eyes_open.png", x: 307, y: 376 };
+  var canvas = document.getElementById("lipCanvas"), ctx = canvas.getContext("2d");
+  var imgs = {}, loaded = 0, need = 6;
+  function load(key, file) {
+    var im = new Image(); im.onload = function () { loaded++; draw(); }; im.onerror = function () { loaded++; draw(); };
+    im.src = "images/character/" + file; imgs[key] = im;
+  }
+  load("base", "base.png"); load("eyes", eyes.file);
+  Object.keys(parts).forEach(function (k) { load(k, parts[k].file); });
+  var level = 0, shape = "closed";
+  function drawPart(im, x, y, scale) {
+    if (!im || !im.naturalWidth) return;
+    ctx.drawImage(im, (x - crop.left) * scale, (y - crop.top) * scale, im.naturalWidth * scale, im.naturalHeight * scale);
+  }
+  function draw() {
+    var w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    var cw = crop.right - crop.left, ch = crop.bottom - crop.top;
+    var scale = Math.min(w / cw, h / ch);
+    ctx.save();
+    ctx.translate((w - cw * scale) / 2, 0);
+    var base = imgs.base;
+    if (base && base.naturalWidth) ctx.drawImage(base, crop.left, crop.top, cw, ch, 0, 0, cw * scale, ch * scale);
+    drawPart(imgs.eyes, eyes.x, eyes.y, scale);
+    var p = parts[shape]; drawPart(imgs[shape], p.x, p.y, scale);
+    // fade bottom edge like the app (DstIn gradient)
+    var g = ctx.createLinearGradient(0, ch * scale * 0.8, 0, ch * scale);
+    g.addColorStop(0, "rgba(0,0,0,1)"); g.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.globalCompositeOperation = "destination-in"; ctx.fillStyle = g; ctx.fillRect(0, 0, cw * scale, ch * scale);
+    ctx.restore();
+    if (loaded < need) { ctx.fillStyle = getComputedStyle(root).getPropertyValue("--muted"); ctx.font = "14px 'Noto Sans JP'"; ctx.fillText("読み込み中…", 14, 24); }
+  }
+  var range = document.getElementById("lipRange"), meter = document.getElementById("lipMeter"), lvEl = document.getElementById("lipLevel"), shEl = document.getElementById("lipShape");
+  function setLevel(v) {
+    level = Math.max(0, Math.min(1, v)); shape = forLevel(level);
+    meter.style.width = (level * 100) + "%"; lvEl.textContent = level.toFixed(2); shEl.textContent = shape;
+    range.value = Math.round(level * 100); draw();
+  }
+  range.addEventListener("input", function () { stopTalk(); setLevel(range.value / 100); });
+  var talking = null;
+  function stopTalk() { if (talking) { cancelAnimationFrame(talking); talking = null; } }
+  document.getElementById("lipPlay").addEventListener("click", function () {
+    stopTalk();
+    var start = performance.now(), seed = Math.random() * 1000;
+    function step(now) {
+      var t = (now - start) / 1000;
+      if (t > 3) { setLevel(0); talking = null; return; }
+      // 擬似的な声の包絡線：音節(約 6Hz)のうねり × ゆっくりした抑揚 × ときどき無音
+      var syll = Math.max(0, Math.sin(t * 2 * Math.PI * 5.5 + seed));
+      var slow = 0.6 + 0.4 * Math.sin(t * 2.1 + seed * 0.3);
+      var pause = (Math.sin(t * 1.3 + seed) > 0.85) ? 0 : 1;
+      setLevel(Math.pow(syll, 0.7) * slow * pause);
+      talking = requestAnimationFrame(step);
+    }
+    talking = requestAnimationFrame(step);
+  });
+  setLevel(0);
+
+  /* ---------- theme demo (same formula as characterColorScheme) ---------- */
+  var characters = [
+    { id: "touhoku_kiritann", name: "東北きりたん", seed: "#A94F5C" },
+    { id: "touhoku_zunko", name: "東北ずん子", seed: "#529A6A" },
+    { id: "zundamon", name: "ずんだもん", seed: "#7FB04A" },
+    { id: "shikoku_metann", name: "四国めたん", seed: "#C2649A" },
+    { id: "touhoku_itako", name: "東北イタコ", seed: "#7B68B0" },
+    { id: "chuugoku_usagi", name: "中国うさぎ", seed: "#B8862B" }
+  ];
+  var MinSaturation = 0.35, PrimaryScale = 1.0, SecondaryScale = 0.4, NeutralScale = 0.12;
+  function hexToHsl(hex) {
+    var r = parseInt(hex.slice(1, 3), 16) / 255, g = parseInt(hex.slice(3, 5), 16) / 255, b = parseInt(hex.slice(5, 7), 16) / 255;
+    var max = Math.max(r, g, b), min = Math.min(r, g, b), h = 0, s = 0, l = (max + min) / 2, d = max - min;
+    if (d) { s = d / (1 - Math.abs(2 * l - 1)); if (max === r) h = ((g - b) / d) % 6; else if (max === g) h = (b - r) / d + 2; else h = (r - g) / d + 4; h *= 60; if (h < 0) h += 360; }
+    return [h, s, l];
+  }
+  function hslToHex(h, s, l) {
+    var c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l - c / 2, r = 0, g = 0, b = 0;
+    if (h < 60) { r = c; g = x; } else if (h < 120) { r = x; g = c; } else if (h < 180) { g = c; b = x; } else if (h < 240) { g = x; b = c; } else if (h < 300) { r = x; b = c; } else { r = c; b = x; }
+    function p(v) { return ("0" + Math.round((v + m) * 255).toString(16)).slice(-2); }
+    return "#" + p(r) + p(g) + p(b);
+  }
+  function palette(seed) {
+    var hsl = hexToHsl(seed), hue = hsl[0], sat = Math.max(hsl[1], MinSaturation);
+    return function tone(lightness, scale) { return hslToHex(hue, sat * scale, lightness / 100); };
+  }
+  // Material 3 のトーン（アプリの定数と同じ）：ライトは primary 40 / container 88 / 背景 98、ダークは primary 80 / container 30 / 背景 6
+  function scheme(seed, dark) {
+    var t = palette(seed);
+    return dark ? { primary: t(80, PrimaryScale), onPrimary: t(20, PrimaryScale), primaryContainer: t(30, PrimaryScale), secondary: t(80, SecondaryScale), background: t(6, NeutralScale), surfaceContainer: t(12, NeutralScale) }
+                : { primary: t(40, PrimaryScale), onPrimary: "#ffffff", primaryContainer: t(88, PrimaryScale), secondary: t(40, SecondaryScale), background: t(98, NeutralScale), surfaceContainer: t(94, NeutralScale) };
+  }
+  var chips = document.getElementById("chips"), swatches = document.getElementById("swatches"), currentSeed = characters[0].seed;
+  characters.forEach(function (c, i) {
+    var b = document.createElement("button"); b.className = "chip" + (i === 0 ? " on" : ""); b.type = "button";
+    b.innerHTML = '<i style="background:' + c.seed + '"></i>' + c.name + ' <span class="mono small muted">' + c.seed + "</span>";
+    b.addEventListener("click", function () {
+      Array.prototype.forEach.call(chips.children, function (x) { x.classList.remove("on"); }); b.classList.add("on");
+      applySeed(c.seed);
+    });
+    chips.appendChild(b);
+  });
+  function applySeed(seed) {
+    currentSeed = seed;
+    var dark = isDark(), s = scheme(seed, dark), t = palette(seed);
+    root.style.setProperty("--accent", s.primary);
+    root.style.setProperty("--accent-2", t(dark ? 75 : 45, SecondaryScale));
+    root.style.setProperty("--accent-soft", s.primaryContainer);
+    root.style.setProperty("--accent-ink", dark ? t(90, PrimaryScale) : t(10, PrimaryScale));
+    var names = ["primary", "onPrimary", "primaryContainer", "secondary", "background", "surfaceContainer"];
+    swatches.innerHTML = names.map(function (n) {
+      var light = n === "background" || n === "surfaceContainer" || n === "primaryContainer" || n === "onPrimary";
+      var ink = (dark && !light) || (!dark && light) ? (dark ? "#111" : "#222") : "#fff";
+      if (dark && (n === "background" || n === "surfaceContainer")) ink = "#ddd";
+      return '<div class="sw" style="background:' + s[n] + ';color:' + ink + '">' + n + "<br>" + s[n] + "</div>";
+    }).join("");
+  }
+  applySeed(currentSeed);
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function () { applySeed(currentSeed); });
+})();
+</script>
+</body>
+</html>

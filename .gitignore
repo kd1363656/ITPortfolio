@@ -1,0 +1,23 @@
+# OS が勝手に作るファイル
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+$RECYCLE.BIN/
+
+# エディタ・IDE の設定
+.vscode/
+.idea/
+*.swp
+*~
+
+# 作業中の一時ファイル・書き出し前の素材
+*.tmp
+*.bak
+*.log
+_scratch/
+raw/
+
+# Node などを使ったときの生成物（使う場合に備えて）
+node_modules/
+dist/
